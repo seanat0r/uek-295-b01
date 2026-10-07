@@ -1,0 +1,13 @@
+{
+  "require": {
+    "slim/slim": "4.*",
+    "slim/psr7": "^1.8",
+    "zircote/swagger-php": "^6.11",
+    "rbdwllr/reallysimplejwt": "^5.0"
+  },
+  "config": {
+    "platform": {
+      "php": "8.3.30"
+    }
+  }
+}
