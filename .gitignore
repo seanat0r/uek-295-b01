@@ -1,2 +1,30 @@
-vendor/
+# etc.
+public/swagger-ui/
+
+# env
+.env
+.env.local
+.env.*.local
+config.local.php
 config/config.json
+
+# composer
+composer.lock
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# log & cache
+*.log
+/chache/
+/logs/
