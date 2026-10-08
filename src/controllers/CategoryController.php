@@ -31,7 +31,7 @@ class CategoryController
      */
     #[OAT\Get(
         path: '/api/v1/categories',
-        summary: 'Gibt alle Kategorien',
+        summary: 'Gibt alle Kategorien zurück',
         tags: ['Kategorien'],
         responses: [
             new OAT\Response(
@@ -39,12 +39,12 @@ class CategoryController
                 description: 'JSON mit allen Kategorien',
             ),
             new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
+                response: 401,
+                description: 'Nicht authentifiziert'
             ),
             new OAT\Response(
-                response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+                response: 500,
+                description: 'Interner Server Error'
             )
         ]
     )]
@@ -67,18 +67,18 @@ class CategoryController
      * @return Response
      */
     #[OAT\Get(
-        path: '/api/v1/categorie/{category_id}',
-        summary: 'Gibt eine Kategorie',
+        path: '/api/v1/category/{category_id}',
+        summary: 'Gibt eine Kategorie zurück',
         tags: ['Kategorien'],
         parameters: [
             new OAT\Parameter(
-                name: 'id',
-                description: 'id von der Kategorie',
+                name: 'category_id',
+                description: 'ID der Kategorie',
                 in: 'path',
                 required: true,
                 schema: new OAT\Schema(
-                    type: 'string',
-                    example: '1'
+                    type: 'integer',
+                    example: 1
                 )
             )
         ],
@@ -88,19 +88,27 @@ class CategoryController
                 description: 'JSON mit einer Kategorie',
             ),
             new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
+                response: 400,
+                description: 'Ungültige Anfrage'
             ),
             new OAT\Response(
                 response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+                description: 'Nicht authentifiziert'
+            ),
+            new OAT\Response(
+                response: 404,
+                description: 'Kategorie nicht gefunden'
+            ),
+            new OAT\Response(
+                response: 500,
+                description: 'Interner Server Error'
             )
         ]
     )]
     public function getCategory(Request $request, Response $response, array $args): Response
     {
         try {
-            $id = $args['id'] ?? null;
+            $id = $args['category_id'] ?? null;
 
             if (filter_var($id, FILTER_VALIDATE_INT, [
                     'options' => ['min_range' => 1, 'max_range' => 2147483647],
@@ -129,10 +137,10 @@ class CategoryController
      * @return Response
      */
     #[OAT\Post(
-        path: '/api/v1/categorie/',
-        summary: 'Erstellt ein neue Kategorie',
+        path: '/api/v1/category',
+        summary: 'Erstellt eine Kategorie',
         requestBody: new OAT\RequestBody(
-            description: '`Active` und `name` muss enthalten sein.',
+            description: '`active` und `name` sind erforderlich.',
             required: true,
             content: new OAT\JsonContent(
                 properties: [
@@ -144,7 +152,7 @@ class CategoryController
                     new OAT\Property(
                         property: 'active',
                         type: 'boolean',
-                        example: 'true, 1 oder "true"'
+                        example: true
                     )
                 ]
             )
@@ -157,15 +165,15 @@ class CategoryController
             ),
             new OAT\Response(
                 response: 400,
-                description: 'Ungültige Request-Body',
+                description: 'Ungültige Anfrage',
+            ),
+            new OAT\Response(
+                response: 401,
+                description: 'Nicht authentifiziert'
             ),
             new OAT\Response(
                 response: 500,
                 description: 'Interner Server Error'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
             )
         ]
     )]
@@ -246,10 +254,10 @@ class CategoryController
      * @return Response
      */
     #[OAT\Patch(
-        path: '/api/v1/categories/{category_id}',
-        summary: 'Ändert eine Kategorie',
+        path: '/api/v1/category/{category_id}',
+        summary: 'Aktualisiert eine Kategorie',
         requestBody: new OAT\RequestBody(
-            description: 'Entweder `Active` oder `name` muss enthalten sein.',
+            description: 'Mindestens eines der Felder `active` oder `name` ist erforderlich.',
             required: true,
             content: new OAT\JsonContent(
                 properties: [
@@ -261,7 +269,7 @@ class CategoryController
                     new OAT\Property(
                         property: 'active',
                         type: 'boolean',
-                        example: 'true, 1 oder "true"'
+                        example: true
                     )
                 ]
             )
@@ -269,39 +277,47 @@ class CategoryController
         tags: ['Kategorien'],
         parameters: [
             new OAT\Parameter(
-                name: 'id',
-                description: 'id von der Kategorie',
+                name: 'category_id',
+                description: 'ID der Kategorie',
                 in: 'path',
                 required: true,
                 schema: new OAT\Schema(
-                    type: 'string',
-                    example: '1'
+                    type: 'integer',
+                    example: 1
                 )
             )
         ],
         responses: [
             new OAT\Response(
                 response: 200,
-                description: 'Kategorie geändert',
+                description: 'Kategorie aktualisiert',
+            ),
+            new OAT\Response(
+                response: 400,
+                description: 'Ungültige Anfrage'
+            ),
+            new OAT\Response(
+                response: 401,
+                description: 'Nicht authentifiziert'
+            ),
+            new OAT\Response(
+                response: 404,
+                description: 'Kategorie nicht gefunden'
+            ),
+            new OAT\Response(
+                response: 422,
+                description: 'Validierung fehlgeschlagen'
             ),
             new OAT\Response(
                 response: 500,
                 description: 'Interner Server Error'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
-            ),
-            new OAT\Response(
-                response: 422,
-                description: 'Kein Request Body übergeben zum ändern.'
             )
         ]
     )]
     public function patchCategory(Request $request, Response $response, array $args): Response
     {
         // args
-        $id = $args['id'] ?? null;
+        $id = $args['category_id'] ?? null;
 
         if (filter_var($id, FILTER_VALIDATE_INT, [
                 'options' => ['min_range' => 1, 'max_range' => 2147483647],
@@ -366,18 +382,18 @@ class CategoryController
      * @return Response
      */
     #[OAT\Delete(
-        path: '/api/v1/categorie/{category_id}',
+        path: '/api/v1/category/{category_id}',
         summary: 'Löscht eine Kategorie',
         tags: ['Kategorien'],
         parameters: [
             new OAT\Parameter(
-                name: 'id',
-                description: 'id von der Kategorie',
+                name: 'category_id',
+                description: 'ID der Kategorie',
                 in: 'path',
                 required: true,
                 schema: new OAT\Schema(
-                    type: 'string',
-                    example: '1'
+                    type: 'integer',
+                    example: 1
                 )
             )
         ],
@@ -387,23 +403,27 @@ class CategoryController
                 description: 'Kategorie gelöscht',
             ),
             new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
+                response: 400,
+                description: 'Ungültige Anfrage'
             ),
             new OAT\Response(
                 response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+                description: 'Nicht authentifiziert'
             ),
             new OAT\Response(
                 response: 404,
-                description: 'Kategorie ID nicht gefunden zu löschen.'
+                description: 'Kategorie nicht gefunden'
+            ),
+            new OAT\Response(
+                response: 500,
+                description: 'Interner Server Error'
             )
         ]
     )]
     public function deleteCategory(Request $request, Response $response, array $args): Response
     {
         try {
-            $id = $args['id'] ?? null;
+            $id = $args['category_id'] ?? null;
 
             if (filter_var($id, FILTER_VALIDATE_INT, [
                     'options' => ['min_range' => 1, 'max_range' => 2147483647],

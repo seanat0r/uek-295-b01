@@ -68,15 +68,15 @@ class AuthMiddleware implements MiddlewareInterface
         responses: [
             new OAT\Response(
                 response: 200,
-                description: 'Anmeldung erfolgreich; JSON mit message und JWT im Cookie jwt_token, gültig für eine Stunde'
+                description: 'Anmeldung erfolgreich'
             ),
             new OAT\Response(
                 response: 400,
-                description: 'Username oder Passwort fehlt, ist kein String oder ist leer'
+                description: 'Ungültige Anfrage'
             ),
             new OAT\Response(
                 response: 401,
-                description: 'Benutzername oder Passwort falsch'
+                description: 'Nicht authentifiziert'
             ),
             new OAT\Response(
                 response: 500,

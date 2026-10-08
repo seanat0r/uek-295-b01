@@ -36,15 +36,15 @@ class ProductController
         responses: [
             new OAT\Response(
                 response: 200,
-                description: 'JSON-Array mit allen Produkten; [] wenn keine vorhanden sind'
+                description: 'JSON mit allen Produkten'
             ),
             new OAT\Response(
                 response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+                description: 'Nicht authentifiziert'
             ),
             new OAT\Response(
                 response: 500,
-                description: 'Interner Serverfehler, beispielsweise ein Datenbankfehler'
+                description: 'Interner Server Error'
             )
         ]
     )]
@@ -85,23 +85,23 @@ class ProductController
         responses: [
             new OAT\Response(
                 response: 200,
-                description: 'JSON mit dem Produkt'
+                description: 'JSON mit einem Produkt'
             ),
             new OAT\Response(
                 response: 400,
-                description: 'SKU ist leer oder länger als 100 Zeichen'
-            ),
-            new OAT\Response(
-                response: 404,
-                description: 'Produkt nicht gefunden; JSON mit message'
+                description: 'Ungültige Anfrage'
             ),
             new OAT\Response(
                 response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+                description: 'Nicht authentifiziert'
+            ),
+            new OAT\Response(
+                response: 404,
+                description: 'Produkt nicht gefunden'
             ),
             new OAT\Response(
                 response: 500,
-                description: 'Interner Serverfehler, beispielsweise ein Datenbankfehler'
+                description: 'Interner Server Error'
             )
         ]
     )]
@@ -148,7 +148,7 @@ class ProductController
                     ),
                     new OAT\Property(
                         property: 'active',
-                        example: 'true, 1 oder "true"',
+                        example: true,
                     ),
                     new OAT\Property(
                         property: 'id_category',
@@ -163,7 +163,7 @@ class ProductController
                     new OAT\Property(
                         property: 'description',
                         type: 'string',
-                        example: 'Logo der CsBe'
+                        example: 'Frisches Brot'
                     ),
                     new OAT\Property(
                         property: 'price',
@@ -187,7 +187,7 @@ class ProductController
                 required: true,
                 schema: new OAT\Schema(
                     type: 'string',
-                    example: '1',
+                    example: '12345678',
                 )
             )
         ],
@@ -202,15 +202,15 @@ class ProductController
             ),
             new OAT\Response(
                 response: 400,
-                description: 'Ungültiger Request-Body, SKU, active oder Datentyp eines optionalen Textfelds'
-            ),
-            new OAT\Response(
-                response: 422,
-                description: 'Validation fehlgeschlagen'
+                description: 'Ungültige Anfrage'
             ),
             new OAT\Response(
                 response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+                description: 'Nicht authentifiziert'
+            ),
+            new OAT\Response(
+                response: 422,
+                description: 'Validierung fehlgeschlagen'
             ),
             new OAT\Response(
                 response: 500,
@@ -320,7 +320,7 @@ class ProductController
             if ($data['wasCreated'] === true) {
                 return helper::success($response, $data['product'], code: 201);
             } else {
-                return helper::success($response);
+                return helper::success($response, $data['product']);
             }
         } catch (InvalidArgumentException $e) {
             return helper::error($response, $e->getMessage(), 422);
@@ -348,7 +348,7 @@ class ProductController
                 required: true,
                 schema: new OAT\Schema(
                     type: 'string',
-                    example: '1',
+                    example: '12345678',
                 )
             )
         ],
@@ -359,15 +359,15 @@ class ProductController
             ),
             new OAT\Response(
                 response: 400,
-                description: 'SKU ist leer oder länger als 100 Zeichen'
-            ),
-            new OAT\Response(
-                response: 404,
-                description: 'Produkt nicht gefunden; JSON mit error und code'
+                description: 'Ungültige Anfrage'
             ),
             new OAT\Response(
                 response: 401,
-                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+                description: 'Nicht authentifiziert'
+            ),
+            new OAT\Response(
+                response: 404,
+                description: 'Produkt nicht gefunden'
             ),
             new OAT\Response(
                 response: 500,

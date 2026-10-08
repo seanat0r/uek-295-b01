@@ -87,10 +87,10 @@ $app->group('/categories', function (RouteCollectorProxy $group) use ($categoryC
 })->addMiddleware($authentication);
 
 $app->group('/category', function (RouteCollectorProxy $group) use ($categoryController) {
-    $group->get('/{id}', [$categoryController, "getCategory"]);
+    $group->get('/{category_id}', [$categoryController, "getCategory"]);
     $group->post('', [$categoryController, "postCategory"]);
-    $group->patch('/{id}', [$categoryController, "patchCategory"]);
-    $group->delete('/{id}', [$categoryController, "deleteCategory"]);
+    $group->patch('/{category_id}', [$categoryController, "patchCategory"]);
+    $group->delete('/{category_id}', [$categoryController, "deleteCategory"]);
 })->addMiddleware($authentication);
 
 // ALL OTHER ENDPOINTS THAT NOT IMPLEMENTED; 405
