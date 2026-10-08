@@ -114,7 +114,8 @@ class CategoryController
         requestBody: new OAT\RequestBody(description: 'name und active sind erforderlich.', required: true, content: new OAT\JsonContent(ref: '#/components/schemas/CategoryInput')),
         responses: [
             new OAT\Response(response: 201, description: 'Kategorie erstellt; enthält die vergebene ID.', content: new OAT\JsonContent(ref: '#/components/schemas/Category')),
-            new OAT\Response(response: 400, description: 'Request-Body fehlt oder name beziehungsweise active sind ungültig.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category name is required.', 'code' => 400])),
+            new OAT\Response(response: 400, description: 'Ungültiges JSON oder fehlender beziehungsweise nicht verarbeitbarer Request-Body.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Invalid request body.', 'code' => 400])),
+            new OAT\Response(response: 422, description: 'name oder active fehlt oder ist ungültig.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category name is required.', 'code' => 422])),
             new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
             new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
@@ -131,7 +132,7 @@ class CategoryController
         $rawActive = $requestBody['active'] ?? null;
         $rawActive = $this->validateActive($rawActive);
         if ($rawActive['isError'] || $rawActive['value'] === null) {
-            return helper::error($response, 'Active must be true, false, 1 or 0.');
+            return helper::error($response, 'Active must be true, false, 1 or 0.', 422);
         }
         if ($rawActive['value'] === true) {
             $active = 1;
@@ -141,11 +142,11 @@ class CategoryController
 
         $name = $requestBody['name'] ?? null;
         if (!is_string($name) || trim($name) === '') {
-            return helper::error($response, 'Category name is required.');
+            return helper::error($response, 'Category name is required.', 422);
         }
 
         if (mb_strlen(trim($name), 'UTF-8') > 500) {
-            return helper::error($response, 'Category name is too long.');
+            return helper::error($response, 'Category name is too long.', 422);
         }
 
         $valueToCreate = [
@@ -205,9 +206,9 @@ class CategoryController
         requestBody: new OAT\RequestBody(description: 'Mindestens name oder active angeben. Nicht übergebene Felder bleiben unverändert.', required: true, content: new OAT\JsonContent(ref: '#/components/schemas/CategoryPatch')),
         responses: [
             new OAT\Response(response: 200, description: 'Kategorie aktualisiert; vollständige Kategorie im Response-Body.', content: new OAT\JsonContent(ref: '#/components/schemas/Category')),
-            new OAT\Response(response: 400, description: 'Kategorie-ID, Request-Body oder ein übergebener Feldwert ist ungültig.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Active must be true, false, 1 or 0.', 'code' => 400])),
+            new OAT\Response(response: 400, description: 'Ungültige Kategorie-ID, ungültiges JSON oder fehlender beziehungsweise nicht verarbeitbarer Request-Body.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Invalid request body.', 'code' => 400])),
             new OAT\Response(response: 404, description: 'Keine Kategorie mit dieser ID vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category not found.', 'code' => 404])),
-            new OAT\Response(response: 422, description: 'Weder name noch active übergeben.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'To update anything, one field is required.', 'code' => 422])),
+            new OAT\Response(response: 422, description: 'Weder name noch active übergeben oder ein übergebener Feldwert ist ungültig.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'To update anything, one field is required.', 'code' => 422])),
             new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
             new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
@@ -234,7 +235,7 @@ class CategoryController
         if (array_key_exists('active', $requestBody)) {
             $rawActive = $this->validateActive($requestBody['active']);
             if ($rawActive['isError']) {
-                return helper::error($response, 'Active must be true, false, 1 or 0.');
+                return helper::error($response, 'Active must be true, false, 1 or 0.', 422);
             }
             $active = (int)$rawActive['value'];
         }
@@ -243,11 +244,11 @@ class CategoryController
         if (array_key_exists('name', $requestBody)) {
             $name = $requestBody['name'];
             if (!is_string($name) || trim($name) === '') {
-                return helper::error($response, 'Category name is required.');
+                return helper::error($response, 'Category name is required.', 422);
             }
             $name = trim($name);
             if (mb_strlen($name, 'UTF-8') > 500) {
-                return helper::error($response, 'Category name is too long.');
+                return helper::error($response, 'Category name is too long.', 422);
             }
         }
 

@@ -106,7 +106,7 @@ class ProductController
     #[OAT\Put(
         path: '/api/v1/product/{sku}',
         operationId: 'putProduct',
-        description: 'Legt ein Produkt unter der SKU an oder ersetzt seine bearbeitbaren Felder. name, active, price und stock sind immer erforderlich. Fehlende optionale Felder id_category, image und description werden auf null gesetzt. Leere Bild- und Beschreibungstexte werden ebenfalls null. Namen und optionale Texte werden getrimmt. Der Preis wird auf zwei Nachkommastellen gerundet. Eine angegebene Kategorie muss existieren.',
+        description: 'Legt ein Produkt unter der SKU an oder ersetzt seine bearbeitbaren Felder. name, active, price und stock sind immer erforderlich. Fehlende optionale Felder id_category, image und description werden auf null gesetzt. Leere Bild- und Beschreibungstexte werden ebenfalls null. Namen und optionale Texte werden getrimmt. Der Preis wird auf zwei Nachkommastellen gerundet und muss danach grösser als null sein. Eine angegebene Kategorie muss existieren.',
         summary: 'Produkt erstellen oder vollständig ersetzen',
         tags: ['Produkte'],
         parameters: [new OAT\Parameter(ref: '#/components/parameters/Sku')],
@@ -114,8 +114,8 @@ class ProductController
         responses: [
             new OAT\Response(response: 200, description: 'Vorhandenes Produkt ersetzt.', content: new OAT\JsonContent(ref: '#/components/schemas/Product')),
             new OAT\Response(response: 201, description: 'Neues Produkt erstellt.', content: new OAT\JsonContent(ref: '#/components/schemas/Product')),
-            new OAT\Response(response: 400, description: 'Ungültige SKU oder kein gültiger Request-Body; active fehlt oder ist ungültig; image oder description haben einen ungültigen Typ.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Active must be true, false, 1 or 0.', 'code' => 400])),
-            new OAT\Response(response: 422, description: 'name, stock, price oder id_category sind ungültig; Textgrenzen überschritten oder Kategorie nicht vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category does not exist.', 'code' => 422])),
+            new OAT\Response(response: 400, description: 'Ungültige SKU, ungültiges JSON oder fehlender beziehungsweise nicht verarbeitbarer Request-Body.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Invalid request body.', 'code' => 400])),
+            new OAT\Response(response: 422, description: 'Pflichtfelder fehlen, Feldwerte sind ungültig, Textgrenzen sind überschritten oder die Kategorie existiert nicht. Der gerundete Preis muss grösser als null sein.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category does not exist.', 'code' => 422])),
             new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
             new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
@@ -158,8 +158,12 @@ class ProductController
         $price = $requestBody['price'] ?? null;
         // 1e63 max size of a decimal in the db
         if ((!is_int($price) && !is_float($price) && !is_string($price))
-            || !is_numeric($price) || !is_finite((float)$price) || (float)$price <= 0 || (float)$price >= 1e63) {
+            || !is_numeric($price) || !is_finite((float)$price) || (float)$price >= 1e63) {
             return helper::error($response, 'Price must be a number greater than zero.', 422);
+        }
+        $price = number_format((float)$price, 2, '.', '');
+        if ((float)$price <= 0) {
+            return helper::error($response, 'Price must be greater than zero after rounding.', 422);
         }
 
         $rawActive = $requestBody['active'] ?? null;
@@ -173,8 +177,7 @@ class ProductController
         } elseif (in_array($rawActive, [false, 0, '0', 'false'], true)) {
             $active = 0;
         } else {
-            return helper::error($response, 'Active must be true, false, 1 or 0.',
-            );
+            return helper::error($response, 'Active must be true, false, 1 or 0.', 422);
         }
 
         // optional category
@@ -194,14 +197,14 @@ class ProductController
             'active' => $active,
             'idCategory' => $idCategory,
             'stock' => $stock,
-            'price' => number_format((float)$price, 2, '.', ''),
+            'price' => $price,
         ];
 
         // optional strings
         foreach (['image', 'description'] as $field) {
             $value = $requestBody[$field] ?? null;
             if ($value !== null && !is_string($value)) {
-                return helper::error($response, "$field must be a string or null.");
+                return helper::error($response, "$field must be a string or null.", 422);
             }
             if ($field === 'image' && $value !== null && mb_strlen(trim($value), 'UTF-8') > 1000) {
                 return helper::error($response, 'Image is too long.', 422);

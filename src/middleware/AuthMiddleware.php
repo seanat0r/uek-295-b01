@@ -18,12 +18,7 @@ use Slim\Psr7\Factory\ResponseFactory;
 class AuthMiddleware implements MiddlewareInterface
 {
 
-    /**
-     * issuer
-     * @var string
-     */
-    private string $issuer = 'localhost';
-
+    
     /**
      * Config file for secrets
      * @param array $config
@@ -31,7 +26,6 @@ class AuthMiddleware implements MiddlewareInterface
     public function __construct(private array $config)
     {
     }
-
 
 
     /**

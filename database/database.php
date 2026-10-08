@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Factory\ResponseFactory;
 
 /**
- * Database Class for connection
+ * Database Class for connection (Singelton)
  */
 class database
 {

@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
     info: new OAT\Info(
         version: '1.0.0',
         title: 'Online-Shop API',
-        description: 'API für Produkte und Kategorien. Zuerst über POST /api/v1/authenticate anmelden und danach das Cookie jwt_token mitsenden. Request-Bodies verwenden application/json. Antworten enthalten direkt die Daten; Fehler enthalten error und code. DELETE liefert bei Erfolg 204 ohne Body. Nicht unterstützte Pfade oder Methoden liefern 405.'
+        description: 'API für Produkte und Kategorien. Zuerst über POST /api/v1/authenticate anmelden und danach das Cookie jwt_token mitsenden. Request-Bodies verwenden application/json. Antworten enthalten direkt die Daten; Fehler enthalten error und code. Ungültiges JSON, ein fehlender oder nicht verarbeitbarer Body und ungültige URL-Parameter führen zu 400; fehlende oder ungültige Felder zu 422. DELETE liefert bei Erfolg 204 ohne Body. Nicht unterstützte Pfade oder Methoden liefern 405.'
     ),
     servers: [new OAT\Server(url: '/', description: 'Aktueller Host')],
     security: [['CookieAuth' => []]],
@@ -111,7 +111,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
                 new OAT\Property(property: 'id_category', description: 'Optionale, existierende Kategorie-ID zwischen 1 und 2147483647; Ganzzahl oder entsprechender Integer-String. Fehlend oder null entfernt die Zuordnung.', nullable: true, anyOf: [new OAT\Schema(type: 'integer', minimum: 1, maximum: 2147483647, nullable: true), new OAT\Schema(type: 'string', nullable: true)], example: 1),
                 new OAT\Property(property: 'image', description: 'Optionaler Bildpfad oder URL; nach dem Trimmen höchstens 1000 Unicode-Zeichen. Fehlend, null oder leer wird als null gespeichert. Keine URL-Prüfung.', type: 'string', nullable: true, example: 'images/products/prod-0001.jpg'),
                 new OAT\Property(property: 'description', description: 'Optionaler Text; vor dem Trimmen höchstens 65535 Bytes in UTF-8. Fehlend, null oder leer wird als null gespeichert.', type: 'string', nullable: true, example: 'Frisches Brot'),
-                new OAT\Property(property: 'price', description: 'Pflichtfeld; endliche Zahl grösser als 0 und kleiner als 1e63. Numerische Strings werden ebenfalls akzeptiert. Wird auf zwei Nachkommastellen gerundet.', anyOf: [new OAT\Schema(type: 'number', minimum: 0, exclusiveMinimum: true, maximum: 1e63, exclusiveMaximum: true), new OAT\Schema(type: 'string')], example: 4.50),
+                new OAT\Property(property: 'price', description: 'Pflichtfeld; endliche Zahl grösser als 0 und kleiner als 1e63. Numerische Strings werden ebenfalls akzeptiert. Wird auf zwei Nachkommastellen gerundet und muss danach noch grösser als null sein.', anyOf: [new OAT\Schema(type: 'number', minimum: 0, exclusiveMinimum: true, maximum: 1e63, exclusiveMaximum: true), new OAT\Schema(type: 'string')], example: 4.50),
                 new OAT\Property(property: 'stock', description: 'Pflichtfeld; ganze Zahl zwischen 0 und 2147483647. Entsprechende Integer-Strings werden ebenfalls akzeptiert.', anyOf: [new OAT\Schema(type: 'integer', minimum: 0, maximum: 2147483647), new OAT\Schema(type: 'string')], example: 12)
             ]
         ),
