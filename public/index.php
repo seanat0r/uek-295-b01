@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use repositories\CategoryRepository;
 use repositories\ProductRepository;
 use Slim\Factory\AppFactory;
+use Slim\Routing\RouteCollectorProxy;
 
 require __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../src/helpers/response.php';
@@ -34,7 +35,7 @@ if ($database instanceof ResponseInterface) {
 /**
  * Authentication Middleware
  */
-$authentication = new AuthMiddleware();
+$authentication = new AuthMiddleware($config);
 
 /**
  * Product Repository
@@ -61,15 +62,33 @@ $app->addBodyParsingMiddleware();
 
 $app->setBasePath('/api/v1');
 
-$app->get('/products', [$productController, "getProducts"]);
-$app->get('/product/{sku}', [$productController, "getProduct"]);
-$app->put('/product/{sku}', [$productController, "putProduct"]);
-$app->delete('/product/{sku}', [$productController, "deleteProduct"]);
 
-$app->get('/categories', [$categoryController, "getCategories"]);
-$app->get('/category/{id}', [$categoryController, "getCategory"]);
-$app->post('/category', [$categoryController, "postCategory"]);
-$app->patch('/category/{id}', [$categoryController, "patchCategory"]);
-$app->delete('/category/{id}', [$categoryController, "deleteCategory"]);
+// AUTHENTICATION ENDPOINTS
+$app->post('/authenticate', [$authentication, 'authenticate']);
+
+// PRODUCTS ENDPOINTS
+$app->group('/products', function (RouteCollectorProxy $group) use ($productController) {
+    $group->get('', [$productController, "getProducts"]);
+})->addMiddleware($authentication);
+
+$app->group('/product', function (RouteCollectorProxy $group) use ($productController) {
+    $group->get('/{sku}', [$productController, "getProduct"]);
+    $group->put('/{sku}', [$productController, "putProduct"]);
+    $group->delete('/{sku}', [$productController, "deleteProduct"]);
+})->addMiddleware($authentication);
+
+
+// CATEGORIES ENDPOINTS
+$app->group('/categories', function (RouteCollectorProxy $group) use ($categoryController) {
+    $group->get('', [$categoryController, "getCategories"]);
+})->addMiddleware($authentication);
+
+$app->group('/category', function (RouteCollectorProxy $group) use ($categoryController) {
+    $group->get('/{id}', [$categoryController, "getCategory"]);
+    $group->post('', [$categoryController, "postCategory"]);
+    $group->patch('/{id}', [$categoryController, "patchCategory"]);
+    $group->delete('/{id}', [$categoryController, "deleteCategory"]);
+})->addMiddleware($authentication);
+
 
 $app->run();
