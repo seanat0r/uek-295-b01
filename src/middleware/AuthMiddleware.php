@@ -91,12 +91,20 @@ class AuthMiddleware implements MiddlewareInterface
                 return helper::error($response, 'Token is missing.', 401);
             }
 
-            $result = Token::validate($token, $this->config['auth_password']);
+            try {
+                $result = Token::validate($token, $this->config['auth_password']);
+            } catch (Exception $e) {
+                return helper::error($response, "Broken token", 401);
+            }
             if (!$result) {
                 return helper::error($response, "Invalid token", 401);
             }
 
-            $expirationCheck = Token::validateExpiration($token);
+            try {
+                $expirationCheck = Token::validateExpiration($token);
+            } catch (Exception $e) {
+                return helper::error($response, "Broken token", 401);
+            }
             if (!$expirationCheck) {
                 return helper::error($response, "token expired", 401);
             }

@@ -104,14 +104,16 @@ class ProductController
         if (!is_int($stock) && !is_string($stock)) {
             return helper::error($response, 'Stock must be an integer between 0 and 2147483647.', 422);
         }
-        $stock = filter_var($stock, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => PHP_INT_MAX]]);
+        // 2147483647 is the max value of a sql int
+        $stock = filter_var($stock, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 2147483647]]);
         if ($stock === false) {
             return helper::error($response, 'Stock must be an integer between 0 and 2147483647.', 422);
         }
 
         $price = $requestBody['price'] ?? null;
+        // 1e63 max size of a decimal in the db
         if ((!is_int($price) && !is_float($price) && !is_string($price))
-            || !is_numeric($price) || !is_finite((float)$price) || (float)$price <= 0) {
+            || !is_numeric($price) || !is_finite((float)$price) || (float)$price <= 0 || (float)$price >= 1e63) {
             return helper::error($response, 'Price must be a number greater than zero.', 422);
         }
 

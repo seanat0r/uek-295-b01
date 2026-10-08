@@ -17,6 +17,7 @@ require_once __DIR__ . '/../src/repositories/CategoryRepository.php';
 require_once __DIR__ . '/../src/repositories/ProductRepository.php';
 require_once __DIR__ . '/../src/controllers/CategoryController.php';
 require_once __DIR__ . '/../src/controllers/ProductController.php';
+require_once __DIR__ . '/../src/controllers/ApiGenerall.php';
 
 /**
  * ENV data
@@ -92,5 +93,7 @@ $app->group('/category', function (RouteCollectorProxy $group) use ($categoryCon
     $group->delete('/{id}', [$categoryController, "deleteCategory"]);
 })->addMiddleware($authentication);
 
+// ALL OTHER ENDPOINTS THAT NOT IMPLEMENTED; 405
+$app->any('{route:.*}', [ApiGeneral::class, 'index']);
 
 $app->run();
