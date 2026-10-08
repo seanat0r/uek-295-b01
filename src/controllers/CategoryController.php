@@ -246,7 +246,7 @@ class CategoryController
      * @return Response
      */
     #[OAT\Patch(
-        path: '/papi/v1/categories/{category_id}',
+        path: '/api/v1/categories/{category_id}',
         summary: 'Ändert eine Kategorie',
         requestBody: new OAT\RequestBody(
             description: 'Entweder `Active` oder `name` muss enthalten sein.',
