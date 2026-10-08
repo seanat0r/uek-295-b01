@@ -80,9 +80,11 @@ class CategoryRepository
                 'name' => $valueToUpdate['name'] ?? null,
             ]);
 
+
             $stmtLastId = $this->pdo->prepare("SELECT * FROM category WHERE category_id = :id LIMIT 1");
             $stmtLastId->execute(['id' => $id]);
-            return $stmtLastId->fetch();
+            $product = $stmtLastId->fetch();
+            return $product ?: [];
         } catch (PDOException $e) {
             throw new Exception("Could not update category with id: {$id}.");
         }

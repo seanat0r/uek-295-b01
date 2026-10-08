@@ -26,13 +26,13 @@ class ProductRepository
 
             foreach ($stmt->fetchAll() as $product) {
                 $data[] = [
-                    'active' => $product['active'],
-                    'id_category' => $product['id_category'],
+                    'active' => (int)$product['active'],
+                    'id_category' => (int)$product['id_category'],
                     'name' => $product['name'],
-                    'image' => $product['image'] ?? 'No image',
-                    'description' => $product['description'] ?? 'No Description',
-                    'price' => $product['price'],
-                    'stock' => $product['stock'],
+                    'image' => $product['image'] ?? '',
+                    'description' => $product['description'] ?? '',
+                    'price' => (float)$product['price'],
+                    'stock' => (int)$product['stock'],
                 ];
             }
 

@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use repositories\ProductRepository;
 
-readonly class ProductController
+class ProductController
 {
     public function __construct(
         private ProductRepository $productRepository,
@@ -37,7 +37,7 @@ readonly class ProductController
 
             // Nothing was found.
             if ($data === []) {
-                return helper::success($response);
+                return helper::success($response, message: "Product not found.", code: 404);
             }
 
             return helper::success($response, $data);

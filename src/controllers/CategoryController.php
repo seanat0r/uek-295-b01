@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use repositories\CategoryRepository;
 
-readonly class CategoryController
+class CategoryController
 {
     public function __construct(
         private CategoryRepository $categoryRepository,
@@ -38,7 +38,7 @@ readonly class CategoryController
 
             // Nothing was found.
             if ($data === []) {
-                return helper::success($response);
+                return helper::success($response, message: "Category not found", code: 404);
             }
 
             return helper::success($response, $data);
@@ -61,7 +61,11 @@ readonly class CategoryController
         if ($rawActive['isError'] || $rawActive['value'] === null) {
             return helper::error($response, 'Active must be true, false, 1 or 0.');
         }
-        $active = $rawActive['value'];
+        if ($rawActive['value'] === true) {
+            $active = 1;
+        } else {
+            $active = 0;
+        }
 
         $name = $requestBody['name'] ?? null;
         if ($name === null || trim($name) === "") {
@@ -85,7 +89,7 @@ readonly class CategoryController
         }
     }
 
-    private function validateActive(string|int|bool $value): array
+    private function validateActive(mixed $value): array
     {
         $infoArray = [
             'isError' => false,
@@ -115,8 +119,6 @@ readonly class CategoryController
         if ($id === null || trim($id) === "") {
             return helper::error($response, "Category ID is required");
         }
-
-        $valueToUpdate = [];
 
         // request Body
         $requestBody = $request->getParsedBody();
@@ -165,6 +167,9 @@ readonly class CategoryController
 
         try {
             $data = $this->categoryRepository->updateProduct($id, $valueToUpdate);
+            if ($data === []) {
+                return helper::error($response, "Category not found.", code: 404);
+            }
             return helper::success($response, $data);
 
         } catch (Exception $e) {
