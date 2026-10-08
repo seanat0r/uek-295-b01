@@ -63,10 +63,11 @@ class ProductRepository
     {
         try {
             $stmtUpsert = $this->pdo->prepare("
-            INSERT INTO product (sku, id_category, name, image, description, price, stock)
-            VALUES (:sku, :id_category, :name, :image, :description, :price, :stock)
+            INSERT INTO product (sku, active, id_category, name, image, description, price, stock)
+            VALUES (:sku, :active, :id_category, :name, :image, :description, :price, :stock)
             ON DUPLICATE KEY UPDATE
                 sku = :skuUpdate,
+                active = :activeUpdate,
                 id_category = :idCategoryUpdate,
                 name = :nameUpdate,
                 image = :imageUpdate,
@@ -77,6 +78,7 @@ class ProductRepository
             ");
             $stmtUpsert->execute([
                 "sku" => $sku,
+                "active" => $valueToUpdate["active"],
                 "id_category" => $valueToUpdate["idCategory"],
                 "name" => $valueToUpdate["name"],
                 "image" => $valueToUpdate["image"],
@@ -85,6 +87,7 @@ class ProductRepository
                 "stock" => $valueToUpdate["stock"],
 
                 "skuUpdate" => $sku,
+                "activeUpdate" => $valueToUpdate["active"],
                 "idCategoryUpdate" => $valueToUpdate["idCategory"],
                 "nameUpdate" => $valueToUpdate["name"],
                 "imageUpdate" => $valueToUpdate["image"],
@@ -104,7 +107,7 @@ class ProductRepository
                 'wasCreated' => $wasCreated,
             ];
         } catch (PDOException $e) {
-            throw new Exception("Could not upsert product with sku: {$sku}. " . $e->getMessage());
+            throw new Exception("Could not upsert product with sku: {$sku}.");
         }
     }
 

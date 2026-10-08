@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 use database\database;
 use middleware\AuthMiddleware;
@@ -64,5 +65,11 @@ $app->get('/products', [$productController, "getProducts"]);
 $app->get('/product/{sku}', [$productController, "getProduct"]);
 $app->put('/product/{sku}', [$productController, "putProduct"]);
 $app->delete('/product/{sku}', [$productController, "deleteProduct"]);
+
+$app->get('/categories', [$categoryController, "getCategories"]);
+$app->get('/category/{id}', [$categoryController, "getCategory"]);
+$app->post('/category', [$categoryController, "postCategory"]);
+$app->patch('/category/{id}', [$categoryController, "patchCategory"]);
+$app->delete('/category/{id}', [$categoryController, "deleteCategory"]);
 
 $app->run();

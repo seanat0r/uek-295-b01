@@ -35,6 +35,7 @@ readonly class ProductController
 
             $data = $this->productRepository->getProduct($sku);
 
+            // Nothing was found.
             if ($data === []) {
                 return helper::success($response);
             }
@@ -81,8 +82,24 @@ readonly class ProductController
             return helper::error($response, 'Price must be a number greater than zero.', 422);
         }
 
+        $active = null;
+        $rawActive = $requestBody['active'] ?? null;
+
+        if (is_string($rawActive)) {
+            $rawActive = trim($rawActive);
+        }
+
+        if (in_array($rawActive, [true, 1, '1', 'true'], true)) {
+            $active = true;
+        } elseif (in_array($rawActive, [false, 0, '0', 'false'], true)) {
+            $active = false;
+        } else {
+            return helper::error($response, 'Active must be true, false, 1 or 0.',
+            );
+        }
+
         // optional category
-        $idCategory = $requestBody['idCategory'] ?? null;
+        $idCategory = $requestBody['id_category'] ?? null;
         if ($idCategory !== null) {
             $idCategory = filter_var($idCategory, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
             if ($idCategory === false) {
@@ -92,6 +109,7 @@ readonly class ProductController
 
         $valueToUpdate = [
             'name' => trim($name),
+            'active' => $active,
             'idCategory' => $idCategory,
             'stock' => $stock,
             'price' => number_format((float)$price, 2, '.', ''),
