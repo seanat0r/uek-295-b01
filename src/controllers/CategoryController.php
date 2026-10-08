@@ -220,7 +220,7 @@ class CategoryController
     }
 
     /**
-     * validate active im response body
+     * validate active in response body
      * @param mixed $value
      * @return array
      */

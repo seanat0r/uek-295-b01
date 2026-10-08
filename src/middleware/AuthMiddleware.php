@@ -120,7 +120,7 @@ class AuthMiddleware implements MiddlewareInterface
     }
 
     /**
-     * Middleware methode, to check the jwt token im cookie
+     * Middleware methode, to check the jwt token in cookie
      * @param Request $request
      * @param RequestHandlerInterface $handler
      * @return Response
