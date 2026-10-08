@@ -12,15 +12,33 @@ use Psr\Http\Server\RequestHandlerInterface;
 use ReallySimpleJWT\Token;
 use Slim\Psr7\Factory\ResponseFactory;
 
+/**
+ * Middleware and Authentication Endpoint
+ */
 class AuthMiddleware implements MiddlewareInterface
 {
 
+    /**
+     * issuer
+     * @var string
+     */
     private string $issuer = 'localhost';
 
+    /**
+     * Config file for secrets
+     * @param array $config
+     */
     public function __construct(private array $config)
     {
     }
 
+    /**
+     * Authenticates the client and give a jwt token in the cookie if successfully
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function authenticate(Request $request, Response $response, array $args): Response
     {
         try {
@@ -44,7 +62,7 @@ class AuthMiddleware implements MiddlewareInterface
 
             $token = Token::create($username, $this->config['auth_password'], $expiration, $this->issuer);
 
-            setcookie("jwt_token", $token, time() + $expiration);
+            setcookie("jwt_token", $token, time() + 3600);
 
             return helper::success($response, message: "Authenticated successfully");
 
@@ -53,6 +71,12 @@ class AuthMiddleware implements MiddlewareInterface
         }
     }
 
+    /**
+     * Middleware methode, to check the jwt token im cookie
+     * @param Request $request
+     * @param RequestHandlerInterface $handler
+     * @return Response
+     */
     public function process(Request $request, RequestHandlerInterface $handler): Response
     {
         $response = (new ResponseFactory())->createResponse();

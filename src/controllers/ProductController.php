@@ -6,14 +6,28 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use repositories\ProductRepository;
 
+/**
+ * Controller for the Product Endpoint
+ */
 class ProductController
 {
+    /**
+     * Constructor
+     * @param ProductRepository $productRepository SQL statements for Products
+     */
     public function __construct(
         private ProductRepository $productRepository,
     )
     {
     }
 
+    /**
+     * send all products
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function getProducts(Request $request, Response $response, array $args): Response
     {
         try {
@@ -25,6 +39,13 @@ class ProductController
         }
     }
 
+    /**
+     * send one product
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function getProduct(Request $request, Response $response, array $args): Response
     {
         try {
@@ -47,6 +68,13 @@ class ProductController
         }
     }
 
+    /**
+     * update or create one product
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function putProduct(Request $request, Response $response, array $args): Response
     {
         // validate args
@@ -156,6 +184,13 @@ class ProductController
         }
     }
 
+    /**
+     * delete one product
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function deleteProduct(Request $request, Response $response, array $args): Response
     {
         try {

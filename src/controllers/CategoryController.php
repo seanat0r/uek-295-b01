@@ -6,14 +6,28 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use repositories\CategoryRepository;
 
+/**
+ * Controller for the Category Endpoint
+ */
 class CategoryController
 {
+    /**
+     * Constructor
+     * @param CategoryRepository $categoryRepository SQL statements for category
+     */
     public function __construct(
         private CategoryRepository $categoryRepository,
     )
     {
     }
 
+    /**
+     * Send all Categories
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function getCategories(Request $request, Response $response, array $args): Response
     {
         try {
@@ -25,14 +39,21 @@ class CategoryController
         }
     }
 
+    /**
+     * Send one category back
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function getCategory(Request $request, Response $response, array $args): Response
     {
         try {
             $id = $args['id'] ?? null;
 
             if (filter_var($id, FILTER_VALIDATE_INT, [
-                'options' => ['min_range' => 1, 'max_range' => 2147483647],
-            ]) === false) {
+                    'options' => ['min_range' => 1, 'max_range' => 2147483647],
+                ]) === false) {
                 return helper::error($response, "Category ID must be a positive integer.");
             }
 
@@ -49,6 +70,13 @@ class CategoryController
         }
     }
 
+    /**
+     * create category
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function postCategory(Request $request, Response $response, array $args): Response
     {
         // request body
@@ -91,6 +119,11 @@ class CategoryController
         }
     }
 
+    /**
+     * validate active im response body
+     * @param mixed $value
+     * @return array
+     */
     private function validateActive(mixed $value): array
     {
         $infoArray = [
@@ -113,6 +146,13 @@ class CategoryController
         return $infoArray;
     }
 
+    /**
+     * update category
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function patchCategory(Request $request, Response $response, array $args): Response
     {
         // args
@@ -137,7 +177,7 @@ class CategoryController
             if ($rawActive['isError']) {
                 return helper::error($response, 'Active must be true, false, 1 or 0.');
             }
-            $active = (int) $rawActive['value'];
+            $active = (int)$rawActive['value'];
         }
 
         $name = null;
@@ -162,7 +202,7 @@ class CategoryController
         }
 
         try {
-            $data = $this->categoryRepository->updateProduct($id, $valueToUpdate);
+            $data = $this->categoryRepository->updateCategory($id, $valueToUpdate);
             if ($data === []) {
                 return helper::error($response, "Category not found.", code: 404);
             }
@@ -173,14 +213,21 @@ class CategoryController
         }
     }
 
+    /**
+     * delete a category
+     * @param Request $request
+     * @param Response $response
+     * @param array $args
+     * @return Response
+     */
     public function deleteCategory(Request $request, Response $response, array $args): Response
     {
         try {
             $id = $args['id'] ?? null;
 
             if (filter_var($id, FILTER_VALIDATE_INT, [
-                'options' => ['min_range' => 1, 'max_range' => 2147483647],
-            ]) === false) {
+                    'options' => ['min_range' => 1, 'max_range' => 2147483647],
+                ]) === false) {
                 return helper::error($response, "Category ID must be a positive integer.");
             }
 

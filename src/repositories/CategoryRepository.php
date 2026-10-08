@@ -7,12 +7,24 @@ use Exception;
 use PDO;
 use PDOException;
 
+/**
+ * SQL statements for Category
+ */
 class CategoryRepository
 {
+    /**
+     * Constructor
+     * @param PDO $pdo db connection
+     */
     public function __construct(private PDO $pdo)
     {
     }
 
+    /**
+     * Get all Categories
+     * @return array <string, string, string>
+     * @throws Exception db failure
+     */
     public function getAllCategories(): array
     {
         try {
@@ -35,6 +47,12 @@ class CategoryRepository
         }
     }
 
+    /**
+     * create category in the db
+     * @param array $valueToCreate <string, string> Value to add
+     * @return array return the added category as an assoc array
+     * @throws Exception db failure
+     */
     public function createCategory(array $valueToCreate): array
     {
         try {
@@ -52,6 +70,12 @@ class CategoryRepository
         }
     }
 
+    /**
+     * get one category
+     * @param string $id category id
+     * @return array return the category as an assoc araay
+     * @throws Exception
+     */
     public function getCategory(string $id): array
     {
         try {
@@ -65,7 +89,14 @@ class CategoryRepository
         }
     }
 
-    public function updateProduct(string $id, array $valueToUpdate): array
+    /**
+     * update category
+     * @param string $id category id
+     * @param array $valueToUpdate <string, string> value to update
+     * @return array returns the full updatet category
+     * @throws Exception db failure
+     */
+    public function updateCategory(string $id, array $valueToUpdate): array
     {
         try {
             $stmtUpdate = $this->pdo->prepare(
@@ -90,6 +121,12 @@ class CategoryRepository
         }
     }
 
+    /**
+     * delete a category in the db
+     * @param string $id category db
+     * @return false[]|true[] an assoc array ["gotDeleted" => <true/ false>]
+     * @throws Exception db failure
+     */
     public function deleteCategory(string $id): array
     {
         try {

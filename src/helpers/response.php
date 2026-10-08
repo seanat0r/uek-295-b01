@@ -5,6 +5,9 @@ namespace helpers;
 
 use Psr\Http\Message\ResponseInterface as httpResponse;
 
+/**
+ * Helper class for creating Responses
+ */
 class response
 {
     /**

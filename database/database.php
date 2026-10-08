@@ -8,15 +8,27 @@ use PDOException;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Factory\ResponseFactory;
 
+/**
+ * Database Class for connection
+ */
 class database
 {
 
+    /**
+     * Singelton
+     * @var PDO|null
+     */
     private static ?PDO $instance = null;
 
     private function __construct()
     {
     }
 
+    /**
+     * Get the current Connection or create if it not exists
+     * @param array $config
+     * @return PDO|ResponseInterface
+     */
     public static function getInstance(array $config): PDO|ResponseInterface
     {
         if (self::$instance !== null) {

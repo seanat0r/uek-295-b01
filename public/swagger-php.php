@@ -6,7 +6,7 @@ use OpenApi\Builder;
 
 require __DIR__ . "/../vendor/autoload.php";
 // Require all scripts within /api directory.
-$scripts = glob(__DIR__ . "/api/*.php");
+$scripts = glob(__DIR__ . "/src/*.php");
 foreach ($scripts as $script) {
     require $script;
 }

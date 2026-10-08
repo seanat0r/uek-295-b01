@@ -8,14 +8,23 @@ use InvalidArgumentException;
 use PDO;
 use PDOException;
 
+/**
+ * SQL statements for Product
+ */
 class ProductRepository
 {
+    /**
+     * Constructor
+     * @param PDO $pdo db connection
+     */
     public function __construct(private PDO $pdo)
     {
     }
 
     /**
-     * @throws Exception
+     * Get all products from db
+     * @return array <int, string, int, null|int, string, string, string, float, int>
+     * @throws Exception db failure
      */
     public function getAllProducts(): array
     {
@@ -45,6 +54,12 @@ class ProductRepository
         }
     }
 
+    /**
+     * get one product
+     * @param string $sku
+     * @return array returns the product as an assoc array
+     * @throws Exception db failure
+     */
     public function getProduct(string $sku): array
     {
         try {
@@ -65,7 +80,11 @@ class ProductRepository
     }
 
     /**
-     * @throws Exception
+     * update or create a new product
+     * @param string $sku
+     * @param array $valueToUpdate value to update
+     * @return array <string, int, int, null|string, null|string, string, string, float, int>
+     * @throws Exception db failure
      */
     public function upsertProduct(string $sku, array $valueToUpdate): array
     {
@@ -129,6 +148,12 @@ class ProductRepository
         }
     }
 
+    /**
+     * delete one product
+     * @param string $sku
+     * @return false[]|true[] ["gotDeleted" => <true/ false>]
+     * @throws Exception db failure
+     */
     public function deleteProduct(string $sku): array
     {
         try {

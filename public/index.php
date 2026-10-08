@@ -56,7 +56,9 @@ $productController = new ProductController($productRepository);
  */
 $categoryController = new CategoryController($categoryRepository);
 
-
+/**
+ * Slim 4 AppFactory
+ */
 $app = AppFactory::create();
 $app->addBodyParsingMiddleware();
 
