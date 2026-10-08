@@ -31,21 +31,14 @@ class CategoryController
      */
     #[OAT\Get(
         path: '/api/v1/categories',
-        summary: 'Gibt alle Kategorien zurück',
+        operationId: 'getCategories',
+        description: 'Liefert alle Kategorien als JSON-Array, einschliesslich inaktiver Kategorien. Ohne Treffer wird ein leeres Array zurückgegeben. Es gibt keine Filter oder Seitennavigation.',
+        summary: 'Alle Kategorien abrufen',
         tags: ['Kategorien'],
         responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'JSON mit allen Kategorien',
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 200, description: 'Kategorieliste; bei leerem Bestand [].', content: new OAT\JsonContent(type: 'array', items: new OAT\Items(ref: '#/components/schemas/Category'))),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function getCategories(Request $request, Response $response, array $args): Response
@@ -68,41 +61,17 @@ class CategoryController
      */
     #[OAT\Get(
         path: '/api/v1/category/{category_id}',
-        summary: 'Gibt eine Kategorie zurück',
+        operationId: 'getCategory',
+        description: 'Liefert eine Kategorie. Bei einer fehlenden Kategorie wird Status 404 mit error und code zurückgegeben.',
+        summary: 'Kategorie anhand der ID abrufen',
         tags: ['Kategorien'],
-        parameters: [
-            new OAT\Parameter(
-                name: 'category_id',
-                description: 'ID der Kategorie',
-                in: 'path',
-                required: true,
-                schema: new OAT\Schema(
-                    type: 'integer',
-                    example: 1
-                )
-            )
-        ],
+        parameters: [new OAT\Parameter(ref: '#/components/parameters/CategoryId')],
         responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'JSON mit einer Kategorie',
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ungültige Anfrage'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 404,
-                description: 'Kategorie nicht gefunden'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 200, description: 'Kategorie gefunden.', content: new OAT\JsonContent(ref: '#/components/schemas/Category')),
+            new OAT\Response(response: 400, description: 'Kategorie-ID ist keine ganze Zahl zwischen 1 und 2147483647.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category ID must be a positive integer.', 'code' => 400])),
+            new OAT\Response(response: 404, description: 'Keine Kategorie mit dieser ID vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category not found.', 'code' => 404])),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function getCategory(Request $request, Response $response, array $args): Response
@@ -120,7 +89,7 @@ class CategoryController
 
             // Nothing was found.
             if ($data === []) {
-                return helper::success($response, message: "Category not found", code: 404);
+                return helper::error($response, "Category not found.", code: 404);
             }
 
             return helper::success($response, $data);
@@ -138,43 +107,16 @@ class CategoryController
      */
     #[OAT\Post(
         path: '/api/v1/category',
-        summary: 'Erstellt eine Kategorie',
-        requestBody: new OAT\RequestBody(
-            description: '`active` und `name` sind erforderlich.',
-            required: true,
-            content: new OAT\JsonContent(
-                properties: [
-                    new OAT\Property(
-                        property: 'name',
-                        type: 'string',
-                        example: 'Backwaren'
-                    ),
-                    new OAT\Property(
-                        property: 'active',
-                        type: 'boolean',
-                        example: true
-                    )
-                ]
-            )
-        ),
+        operationId: 'postCategory',
+        description: 'Erstellt eine Kategorie mit automatisch vergebener ID. name und active sind erforderlich. Der Name wird getrimmt.',
+        summary: 'Kategorie erstellen',
         tags: ['Kategorien'],
+        requestBody: new OAT\RequestBody(description: 'name und active sind erforderlich.', required: true, content: new OAT\JsonContent(ref: '#/components/schemas/CategoryInput')),
         responses: [
-            new OAT\Response(
-                response: 201,
-                description: 'Kategorie erstellt',
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ungültige Anfrage',
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 201, description: 'Kategorie erstellt; enthält die vergebene ID.', content: new OAT\JsonContent(ref: '#/components/schemas/Category')),
+            new OAT\Response(response: 400, description: 'Request-Body fehlt oder name beziehungsweise active sind ungültig.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category name is required.', 'code' => 400])),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function postCategory(Request $request, Response $response, array $args): Response
@@ -255,63 +197,19 @@ class CategoryController
      */
     #[OAT\Patch(
         path: '/api/v1/category/{category_id}',
-        summary: 'Aktualisiert eine Kategorie',
-        requestBody: new OAT\RequestBody(
-            description: 'Mindestens eines der Felder `active` oder `name` ist erforderlich.',
-            required: true,
-            content: new OAT\JsonContent(
-                properties: [
-                    new OAT\Property(
-                        property: 'name',
-                        type: 'string',
-                        example: 'Backwaren'
-                    ),
-                    new OAT\Property(
-                        property: 'active',
-                        type: 'boolean',
-                        example: true
-                    )
-                ]
-            )
-        ),
+        operationId: 'patchCategory',
+        description: 'Ändert nur die übergebenen Felder name und active. Mindestens eines dieser Felder ist erforderlich; null ist für beide Felder ungültig. Nicht übergebene Felder behalten ihren Wert. Der Name wird getrimmt.',
+        summary: 'Kategorie teilweise aktualisieren',
         tags: ['Kategorien'],
-        parameters: [
-            new OAT\Parameter(
-                name: 'category_id',
-                description: 'ID der Kategorie',
-                in: 'path',
-                required: true,
-                schema: new OAT\Schema(
-                    type: 'integer',
-                    example: 1
-                )
-            )
-        ],
+        parameters: [new OAT\Parameter(ref: '#/components/parameters/CategoryId')],
+        requestBody: new OAT\RequestBody(description: 'Mindestens name oder active angeben. Nicht übergebene Felder bleiben unverändert.', required: true, content: new OAT\JsonContent(ref: '#/components/schemas/CategoryPatch')),
         responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'Kategorie aktualisiert',
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ungültige Anfrage'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 404,
-                description: 'Kategorie nicht gefunden'
-            ),
-            new OAT\Response(
-                response: 422,
-                description: 'Validierung fehlgeschlagen'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 200, description: 'Kategorie aktualisiert; vollständige Kategorie im Response-Body.', content: new OAT\JsonContent(ref: '#/components/schemas/Category')),
+            new OAT\Response(response: 400, description: 'Kategorie-ID, Request-Body oder ein übergebener Feldwert ist ungültig.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Active must be true, false, 1 or 0.', 'code' => 400])),
+            new OAT\Response(response: 404, description: 'Keine Kategorie mit dieser ID vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category not found.', 'code' => 404])),
+            new OAT\Response(response: 422, description: 'Weder name noch active übergeben.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'To update anything, one field is required.', 'code' => 422])),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function patchCategory(Request $request, Response $response, array $args): Response
@@ -383,41 +281,17 @@ class CategoryController
      */
     #[OAT\Delete(
         path: '/api/v1/category/{category_id}',
-        summary: 'Löscht eine Kategorie',
+        operationId: 'deleteCategory',
+        description: 'Löscht eine Kategorie. Bei Erfolg wird kein Antwortinhalt gesendet. Eine Löschung, die an einer Datenbankbedingung scheitert, wird aktuell als 500 gemeldet.',
+        summary: 'Kategorie löschen',
         tags: ['Kategorien'],
-        parameters: [
-            new OAT\Parameter(
-                name: 'category_id',
-                description: 'ID der Kategorie',
-                in: 'path',
-                required: true,
-                schema: new OAT\Schema(
-                    type: 'integer',
-                    example: 1
-                )
-            )
-        ],
+        parameters: [new OAT\Parameter(ref: '#/components/parameters/CategoryId')],
         responses: [
-            new OAT\Response(
-                response: 204,
-                description: 'Kategorie gelöscht',
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ungültige Anfrage'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 404,
-                description: 'Kategorie nicht gefunden'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 204, description: 'Kategorie gelöscht; leerer Response-Body.'),
+            new OAT\Response(response: 400, description: 'Kategorie-ID ist keine ganze Zahl zwischen 1 und 2147483647.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category ID must be a positive integer.', 'code' => 400])),
+            new OAT\Response(response: 404, description: 'Keine Kategorie mit dieser ID vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category not found.', 'code' => 404])),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function deleteCategory(Request $request, Response $response, array $args): Response
@@ -434,7 +308,7 @@ class CategoryController
             $data = $this->categoryRepository->deleteCategory($id);
 
             if ($data["gotDeleted"] === false) {
-                return helper::error($response, code: 404);
+                return helper::error($response, "Category not found.", code: 404);
             } else {
                 return helper::success($response, code: 204);
             }

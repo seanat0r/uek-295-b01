@@ -31,21 +31,14 @@ class ProductController
      */
     #[OAT\Get(
         path: '/api/v1/products',
-        summary: 'Gibt alle Produkte zurück',
+        operationId: 'getProducts',
+        description: 'Liefert alle Produkte als JSON-Array, einschliesslich inaktiver Produkte. Ohne Treffer wird ein leeres Array zurückgegeben. Es gibt keine Filter oder Seitennavigation.',
+        summary: 'Alle Produkte abrufen',
         tags: ['Produkte'],
         responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'JSON mit allen Produkten'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 200, description: 'Produktliste; bei leerem Bestand [].', content: new OAT\JsonContent(type: 'array', items: new OAT\Items(ref: '#/components/schemas/Product'))),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function getProducts(Request $request, Response $response, array $args): Response
@@ -68,41 +61,17 @@ class ProductController
      */
     #[OAT\Get(
         path: '/api/v1/product/{sku}',
-        summary: 'Gibt ein Produkt anhand der SKU zurück',
+        operationId: 'getProduct',
+        description: 'Liefert ein Produkt. Die SKU wird vor der Suche getrimmt. Bei einem fehlenden Produkt wird Status 404 mit error und code zurückgegeben.',
+        summary: 'Produkt anhand der SKU abrufen',
         tags: ['Produkte'],
-        parameters: [
-            new OAT\Parameter(
-                name: 'sku',
-                description: 'Eindeutige SKU des Produkts',
-                in: 'path',
-                required: true,
-                schema: new OAT\Schema(
-                    type: 'string',
-                    example: '12345678'
-                )
-            )
-        ],
+        parameters: [new OAT\Parameter(ref: '#/components/parameters/Sku')],
         responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'JSON mit einem Produkt'
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ungültige Anfrage'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 404,
-                description: 'Produkt nicht gefunden'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 200, description: 'Produkt gefunden.', content: new OAT\JsonContent(ref: '#/components/schemas/Product')),
+            new OAT\Response(response: 400, description: 'SKU ist leer oder länger als 100 Zeichen.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'SKU must contain 1 to 100 characters.', 'code' => 400])),
+            new OAT\Response(response: 404, description: 'Kein Produkt mit dieser SKU vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Product not found.', 'code' => 404])),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function getProduct(Request $request, Response $response, array $args): Response
@@ -118,7 +87,7 @@ class ProductController
 
             // Nothing was found.
             if ($data === []) {
-                return helper::success($response, message: "Product not found.", code: 404);
+                return helper::error($response, "Product not found.", code: 404);
             }
 
             return helper::success($response, $data);
@@ -136,86 +105,19 @@ class ProductController
      */
     #[OAT\Put(
         path: '/api/v1/product/{sku}',
-        summary: 'Erstellt oder ersetzt ein Produkt anhand der SKU',
-        requestBody: new OAT\RequestBody(
-            required: true,
-            content: new OAT\JsonContent(
-                properties: [
-                    new OAT\Property(
-                        property: 'name',
-                        type: 'string',
-                        example: 'Brot'
-                    ),
-                    new OAT\Property(
-                        property: 'active',
-                        example: true,
-                    ),
-                    new OAT\Property(
-                        property: 'id_category',
-                        type: 'integer',
-                        example: 1,
-                    ),
-                    new OAT\Property(
-                        property: 'image',
-                        type: 'string',
-                        example: 'https://example.com/logo.svg'
-                    ),
-                    new OAT\Property(
-                        property: 'description',
-                        type: 'string',
-                        example: 'Frisches Brot'
-                    ),
-                    new OAT\Property(
-                        property: 'price',
-                        type: 'number',
-                        example: 123.98
-                    ),
-                    new OAT\Property(
-                        property: 'stock',
-                        type: 'integer',
-                        example: 3
-                    )
-                ],
-            )
-        ),
+        operationId: 'putProduct',
+        description: 'Legt ein Produkt unter der SKU an oder ersetzt seine bearbeitbaren Felder. name, active, price und stock sind immer erforderlich. Fehlende optionale Felder id_category, image und description werden auf null gesetzt. Leere Bild- und Beschreibungstexte werden ebenfalls null. Namen und optionale Texte werden getrimmt. Der Preis wird auf zwei Nachkommastellen gerundet. Eine angegebene Kategorie muss existieren.',
+        summary: 'Produkt erstellen oder vollständig ersetzen',
         tags: ['Produkte'],
-        parameters: [
-            new OAT\Parameter(
-                name: 'sku',
-                description: 'Eindeutige SKU des Produkts',
-                in: 'path',
-                required: true,
-                schema: new OAT\Schema(
-                    type: 'string',
-                    example: '12345678',
-                )
-            )
-        ],
+        parameters: [new OAT\Parameter(ref: '#/components/parameters/Sku')],
+        requestBody: new OAT\RequestBody(description: 'name, active, price und stock sind erforderlich. Optionale Felder werden bei fehlender Angabe auf null gesetzt.', required: true, content: new OAT\JsonContent(ref: '#/components/schemas/ProductInput')),
         responses: [
-            new OAT\Response(
-                response: 200,
-                description: 'Produkt aktualisiert'
-            ),
-            new OAT\Response(
-                response: 201,
-                description: 'Produkt erstellt'
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ungültige Anfrage'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 422,
-                description: 'Validierung fehlgeschlagen'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 200, description: 'Vorhandenes Produkt ersetzt.', content: new OAT\JsonContent(ref: '#/components/schemas/Product')),
+            new OAT\Response(response: 201, description: 'Neues Produkt erstellt.', content: new OAT\JsonContent(ref: '#/components/schemas/Product')),
+            new OAT\Response(response: 400, description: 'Ungültige SKU oder kein gültiger Request-Body; active fehlt oder ist ungültig; image oder description haben einen ungültigen Typ.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Active must be true, false, 1 or 0.', 'code' => 400])),
+            new OAT\Response(response: 422, description: 'name, stock, price oder id_category sind ungültig; Textgrenzen überschritten oder Kategorie nicht vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Category does not exist.', 'code' => 422])),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function putProduct(Request $request, Response $response, array $args): Response
@@ -338,41 +240,17 @@ class ProductController
      */
     #[OAT\Delete(
         path: '/api/v1/product/{sku}',
-        summary: 'Löscht ein Produkt anhand der SKU',
+        operationId: 'deleteProduct',
+        description: 'Löscht das Produkt mit der angegebenen SKU. Bei Erfolg wird kein Antwortinhalt gesendet.',
+        summary: 'Produkt löschen',
         tags: ['Produkte'],
-        parameters: [
-            new OAT\Parameter(
-                name: 'sku',
-                description: 'Eindeutige SKU des Produkts',
-                in: 'path',
-                required: true,
-                schema: new OAT\Schema(
-                    type: 'string',
-                    example: '12345678',
-                )
-            )
-        ],
+        parameters: [new OAT\Parameter(ref: '#/components/parameters/Sku')],
         responses: [
-            new OAT\Response(
-                response: 204,
-                description: 'Produkt gelöscht'
-            ),
-            new OAT\Response(
-                response: 400,
-                description: 'Ungültige Anfrage'
-            ),
-            new OAT\Response(
-                response: 401,
-                description: 'Nicht authentifiziert'
-            ),
-            new OAT\Response(
-                response: 404,
-                description: 'Produkt nicht gefunden'
-            ),
-            new OAT\Response(
-                response: 500,
-                description: 'Interner Server Error'
-            )
+            new OAT\Response(response: 204, description: 'Produkt gelöscht; leerer Response-Body.'),
+            new OAT\Response(response: 400, description: 'SKU ist leer oder länger als 100 Zeichen.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'SKU must contain 1 to 100 characters.', 'code' => 400])),
+            new OAT\Response(response: 404, description: 'Kein Produkt mit dieser SKU vorhanden.', content: new OAT\JsonContent(ref: '#/components/schemas/Error', example: ['error' => 'Product not found.', 'code' => 404])),
+            new OAT\Response(ref: '#/components/responses/Unauthenticated', response: 401),
+            new OAT\Response(ref: '#/components/responses/ServerError', response: 500),
         ]
     )]
     public function deleteProduct(Request $request, Response $response, array $args): Response
@@ -387,7 +265,7 @@ class ProductController
             $data = $this->productRepository->deleteProduct($sku);
 
             if ($data["gotDeleted"] === false) {
-                return helper::error($response, code: 404);
+                return helper::error($response, "Product not found.", code: 404);
             } else {
                 return helper::success($response, code: 204);
             }

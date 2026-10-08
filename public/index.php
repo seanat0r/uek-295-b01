@@ -17,6 +17,7 @@ require_once __DIR__ . '/../src/repositories/CategoryRepository.php';
 require_once __DIR__ . '/../src/repositories/ProductRepository.php';
 require_once __DIR__ . '/../src/controllers/CategoryController.php';
 require_once __DIR__ . '/../src/controllers/ProductController.php';
+require_once __DIR__ . '/../src/controllers/AuthController.php';
 require_once __DIR__ . '/../src/controllers/ApiGenerall.php';
 
 /**
@@ -37,6 +38,11 @@ if ($database instanceof ResponseInterface) {
  * Authentication Middleware
  */
 $authentication = new AuthMiddleware($config);
+
+/**
+ * Authentication Controller
+ */
+$authenticationController = new AuthController($config);
 
 /**
  * Product Repository
@@ -67,7 +73,7 @@ $app->setBasePath('/api/v1');
 
 
 // AUTHENTICATION ENDPOINTS
-$app->post('/authenticate', [$authentication, 'authenticate']);
+$app->post('/authenticate', [$authenticationController, 'authenticate']);
 
 // PRODUCTS ENDPOINTS
 $app->group('/products', function (RouteCollectorProxy $group) use ($productController) {
