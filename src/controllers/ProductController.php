@@ -28,10 +28,11 @@ class ProductController
     public function getProduct(Request $request, Response $response, array $args): Response
     {
         try {
-            $sku = $args['sku'] ?? '';
-            if ($sku === null || $sku === '') {
-                helper::error($response, "Product sku can't be empty.");
+            $sku = $args['sku'] ?? null;
+            if (!is_string($sku) || trim($sku) === '' || mb_strlen($sku, 'UTF-8') > 100) {
+                return helper::error($response, 'SKU must contain 1 to 100 characters.', 400);
             }
+            $sku = trim($sku);
 
             $data = $this->productRepository->getProduct($sku);
 
@@ -50,10 +51,10 @@ class ProductController
     {
         // validate args
         $sku = $args['sku'] ?? null;
-        $sku = trim($sku);
-        if ($sku === null || $sku === '') {
-            helper::error($response, "Product sku can't be empty.");
+        if (!is_string($sku) || trim($sku) === '' || mb_strlen($sku, 'UTF-8') > 100) {
+            return helper::error($response, 'SKU must contain 1 to 100 characters.', 400);
         }
+        $sku = trim($sku);
 
 
         $requestBody = $request->getParsedBody();
@@ -67,13 +68,17 @@ class ProductController
             return helper::error($response, 'Name is mandatory', 422);
         }
 
+        if (mb_strlen(trim($name), 'UTF-8') > 500) {
+            return helper::error($response, 'Name is too long.', 422);
+        }
+
         $stock = $requestBody['stock'] ?? null;
         if (!is_int($stock) && !is_string($stock)) {
-            return helper::error($response, 'Stock must be a non-negative integer.', 422);
+            return helper::error($response, 'Stock must be an integer between 0 and 2147483647.', 422);
         }
-        $stock = filter_var($stock, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+        $stock = filter_var($stock, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => PHP_INT_MAX]]);
         if ($stock === false) {
-            return helper::error($response, 'Stock must be a non-negative integer.', 422);
+            return helper::error($response, 'Stock must be an integer between 0 and 2147483647.', 422);
         }
 
         $price = $requestBody['price'] ?? null;
@@ -82,7 +87,6 @@ class ProductController
             return helper::error($response, 'Price must be a number greater than zero.', 422);
         }
 
-        $active = null;
         $rawActive = $requestBody['active'] ?? null;
 
         if (is_string($rawActive)) {
@@ -90,9 +94,9 @@ class ProductController
         }
 
         if (in_array($rawActive, [true, 1, '1', 'true'], true)) {
-            $active = true;
+            $active = 1;
         } elseif (in_array($rawActive, [false, 0, '0', 'false'], true)) {
-            $active = false;
+            $active = 0;
         } else {
             return helper::error($response, 'Active must be true, false, 1 or 0.',
             );
@@ -101,7 +105,10 @@ class ProductController
         // optional category
         $idCategory = $requestBody['id_category'] ?? null;
         if ($idCategory !== null) {
-            $idCategory = filter_var($idCategory, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if (!is_int($idCategory) && !is_string($idCategory)) {
+                return helper::error($response, 'Category ID must be a positive integer or null.', 422);
+            }
+            $idCategory = filter_var($idCategory, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 2147483647]]);
             if ($idCategory === false) {
                 return helper::error($response, 'Category ID must be a positive integer or null.', 422);
             }
@@ -118,6 +125,16 @@ class ProductController
         // optional strings
         foreach (['image', 'description'] as $field) {
             $value = $requestBody[$field] ?? null;
+            if ($value !== null && !is_string($value)) {
+                return helper::error($response, "$field must be a string or null.");
+            }
+            if ($field === 'image' && $value !== null && mb_strlen(trim($value), 'UTF-8') > 1000) {
+                return helper::error($response, 'Image is too long.', 422);
+            }
+            // 65535 is max size of a sql text datatype
+            if ($field === 'description' && $value !== null && strlen($value) > 65535) {
+                return helper::error($response, 'Description is too long.', 422);
+            }
             $valueToUpdate[$field] = $value === null || trim($value) === ''
                 ? null
                 : trim($value);
@@ -132,6 +149,8 @@ class ProductController
             } else {
                 return helper::success($response);
             }
+        } catch (InvalidArgumentException $e) {
+            return helper::error($response, $e->getMessage(), 422);
         } catch (Exception $e) {
             return helper::error($response, $e->getMessage(), 500);
         }
@@ -140,10 +159,11 @@ class ProductController
     public function deleteProduct(Request $request, Response $response, array $args): Response
     {
         try {
-            $sku = $args['sku'] ?? '';
-            if ($sku === null || $sku === '') {
-                helper::error($response, "Product sku can't be empty.");
+            $sku = $args['sku'] ?? null;
+            if (!is_string($sku) || trim($sku) === '' || mb_strlen($sku, 'UTF-8') > 100) {
+                return helper::error($response, 'SKU must contain 1 to 100 characters.', 400);
             }
+            $sku = trim($sku);
 
             $data = $this->productRepository->deleteProduct($sku);
 

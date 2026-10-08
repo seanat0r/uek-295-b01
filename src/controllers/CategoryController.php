@@ -30,8 +30,10 @@ class CategoryController
         try {
             $id = $args['id'] ?? null;
 
-            if ($id === null || trim($id) === "") {
-                return helper::error($response, "Category ID is required");
+            if (filter_var($id, FILTER_VALIDATE_INT, [
+                'options' => ['min_range' => 1, 'max_range' => 2147483647],
+            ]) === false) {
+                return helper::error($response, "Category ID must be a positive integer.");
             }
 
             $data = $this->categoryRepository->getCategory($id);
@@ -56,7 +58,7 @@ class CategoryController
         }
 
         // validation
-        $rawActive = $requestBody['active'] ?? 'null';
+        $rawActive = $requestBody['active'] ?? null;
         $rawActive = $this->validateActive($rawActive);
         if ($rawActive['isError'] || $rawActive['value'] === null) {
             return helper::error($response, 'Active must be true, false, 1 or 0.');
@@ -68,16 +70,16 @@ class CategoryController
         }
 
         $name = $requestBody['name'] ?? null;
-        if ($name === null || trim($name) === "") {
+        if (!is_string($name) || trim($name) === '') {
             return helper::error($response, 'Category name is required.');
         }
 
-        if (strlen($name) > 500) {
+        if (mb_strlen(trim($name), 'UTF-8') > 500) {
             return helper::error($response, 'Category name is too long.');
         }
 
         $valueToCreate = [
-            'name' => $name,
+            'name' => trim($name),
             'active' => $active,
         ];
 
@@ -116,8 +118,10 @@ class CategoryController
         // args
         $id = $args['id'] ?? null;
 
-        if ($id === null || trim($id) === "") {
-            return helper::error($response, "Category ID is required");
+        if (filter_var($id, FILTER_VALIDATE_INT, [
+                'options' => ['min_range' => 1, 'max_range' => 2147483647],
+            ]) === false) {
+            return helper::error($response, "Category ID must be a positive integer.");
         }
 
         // request Body
@@ -126,34 +130,26 @@ class CategoryController
             return helper::error($response, 'Invalid request body.');
         }
 
-        //validate
+        // Validate only fields supplied in the PATCH request.
         $active = null;
-        $rawActive = $requestBody['active'] ?? 'not set';
-
-        if ($rawActive !== 'not set') {
-            $rawActive = $this->validateActive($rawActive);
-            if ($rawActive['isError'] || $rawActive['value'] === null) {
+        if (array_key_exists('active', $requestBody)) {
+            $rawActive = $this->validateActive($requestBody['active']);
+            if ($rawActive['isError']) {
                 return helper::error($response, 'Active must be true, false, 1 or 0.');
             }
-            if ($rawActive['value'] === true) {
-                $active = '1';
-            } else {
-                $active = '0';
-            }
+            $active = (int) $rawActive['value'];
         }
 
-        $name = $requestBody['name'] ?? 'not set';
-
-        if ($name !== 'not set') {
-            if ($name === null || trim($name) === "") {
+        $name = null;
+        if (array_key_exists('name', $requestBody)) {
+            $name = $requestBody['name'];
+            if (!is_string($name) || trim($name) === '') {
                 return helper::error($response, 'Category name is required.');
             }
-
-            if (strlen($name) > 500) {
+            $name = trim($name);
+            if (mb_strlen($name, 'UTF-8') > 500) {
                 return helper::error($response, 'Category name is too long.');
             }
-        } else {
-            $name = null;
         }
 
         $valueToUpdate = [
@@ -182,8 +178,10 @@ class CategoryController
         try {
             $id = $args['id'] ?? null;
 
-            if ($id === null || trim($id) === "") {
-                return helper::error($response, "Category ID is required");
+            if (filter_var($id, FILTER_VALIDATE_INT, [
+                'options' => ['min_range' => 1, 'max_range' => 2147483647],
+            ]) === false) {
+                return helper::error($response, "Category ID must be a positive integer.");
             }
 
             $data = $this->categoryRepository->deleteCategory($id);

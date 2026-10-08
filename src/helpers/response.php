@@ -12,13 +12,13 @@ class response
      * @param httpResponse $httpResponse response object (Psr\Http\Message\)
      * @param array|null $data Any Data from db as an assoc array.
      * @param string|null $message Any extra information
-     * @param int $code http code 2xx
+     * @param int $code http code 2xx or 404
      * @return httpResponse response object (Psr\Http\Message\)
      */
     public static function success(httpResponse $httpResponse, array|null $data = null, string|null $message = null, int $code = 200): httpResponse
     {
         if ($message !== null && $data === null) {
-            $httpResponse->getBody()->write(json_encode($message));
+            $httpResponse->getBody()->write(json_encode(["message" => $message]));
         }
 
         if ($data !== null && $message === null) {

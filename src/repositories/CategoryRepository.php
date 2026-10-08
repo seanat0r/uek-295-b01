@@ -35,7 +35,7 @@ class CategoryRepository
         }
     }
 
-    public function createCategory(array $valueToCreate)
+    public function createCategory(array $valueToCreate): array
     {
         try {
             $stmt = $this->pdo->prepare("INSERT INTO category (name, active) VALUES (:name, :active)");

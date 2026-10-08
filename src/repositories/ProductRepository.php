@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace repositories;
 
 use Exception;
+use InvalidArgumentException;
 use PDO;
 use PDOException;
 
@@ -26,11 +27,13 @@ class ProductRepository
 
             foreach ($stmt->fetchAll() as $product) {
                 $data[] = [
+                    'product_id' => (int)$product['product_id'],
+                    'sku' => $product['sku'],
                     'active' => (int)$product['active'],
-                    'id_category' => (int)$product['id_category'],
+                    'id_category' => $product['id_category'] === null ? null : (int)$product['id_category'],
                     'name' => $product['name'],
-                    'image' => $product['image'] ?? '',
-                    'description' => $product['description'] ?? '',
+                    'image' => $product['image'],
+                    'description' => $product['description'],
                     'price' => (float)$product['price'],
                     'stock' => (int)$product['stock'],
                 ];
@@ -49,7 +52,12 @@ class ProductRepository
             $stmt->execute(['sku' => $sku]);
 
             // if nothing founds, return not false, instead an empty array.
-            return $stmt->fetch() ?: [];
+            $product = $stmt->fetch();
+            if ($product === false) {
+                return [];
+            }
+            $product['price'] = (float)$product['price'];
+            return $product;
 
         } catch (PDOException $e) {
             throw new Exception("Could not get product with sku: {$sku}.");
@@ -62,6 +70,15 @@ class ProductRepository
     public function upsertProduct(string $sku, array $valueToUpdate): array
     {
         try {
+            // check if category id exists
+            if ($valueToUpdate['idCategory'] !== null) {
+                $stmtCategory = $this->pdo->prepare('SELECT 1 FROM category WHERE category_id = :id');
+                $stmtCategory->execute(['id' => $valueToUpdate['idCategory']]);
+                if ($stmtCategory->fetchColumn() === false) {
+                    throw new InvalidArgumentException('Category does not exist.');
+                }
+            }
+
             $stmtUpsert = $this->pdo->prepare("
             INSERT INTO product (sku, active, id_category, name, image, description, price, stock)
             VALUES (:sku, :active, :id_category, :name, :image, :description, :price, :stock)
@@ -101,6 +118,7 @@ class ProductRepository
             $stmtLastSku = $this->pdo->prepare("SELECT * FROM product WHERE sku = :sku LIMIT 1");
             $stmtLastSku->execute(['sku' => $sku]);
             $product = $stmtLastSku->fetch();
+            $product['price'] = (float)$product['price'];
 
             return [
                 'product' => $product,
