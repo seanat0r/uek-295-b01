@@ -45,10 +45,13 @@ class AuthMiddleware implements MiddlewareInterface
             $username = $request->getParsedBody()['username'] ?? null;
             $password = $request->getParsedBody()['password'] ?? null;
 
-            $username = trim($username);
-            $password = trim($password);
+            if (!is_string($username) || !is_string($password)) {
+                return helper::error($response, "Username and password must be strings");
+            }
 
-            if (empty($username) || empty($password)) {
+            $username = trim($username);
+
+            if ($username === '' || $password === '') {
                 return helper::error($response, "Invalid username or password");
             }
 
@@ -89,9 +92,13 @@ class AuthMiddleware implements MiddlewareInterface
             }
 
             $result = Token::validate($token, $this->config['auth_password']);
-
             if (!$result) {
                 return helper::error($response, "Invalid token", 401);
+            }
+
+            $expirationCheck = Token::validateExpiration($token);
+            if (!$expirationCheck) {
+                return helper::error($response, "token expired", 401);
             }
             return $handler->handle($request);
 
