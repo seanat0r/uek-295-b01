@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use helpers\response as helper;
+use OpenApi\Attributes as OAT;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -17,8 +18,12 @@ class ApiGeneral
      * @param array $args
      * @return Response
      */
+    #[OAT\Response(
+        response: 405,
+        description: 'HTTP-Methode nicht erlaubt'
+    )]
     static public function index(Request $request, Response $response, array $args): Response
     {
-        return helper::error($response, "Endpoint does not exist", 404);
+        return helper::error($response, "Endpoint does not exist", 405);
     }
 }

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use helpers\response as helper;
+use OpenApi\Attributes as OAT;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use repositories\ProductRepository;
@@ -28,6 +29,25 @@ class ProductController
      * @param array $args
      * @return Response
      */
+    #[OAT\Get(
+        path: '/api/v1/products',
+        summary: 'Gibt alle Produkte zurück',
+        tags: ['Produkte'],
+        responses: [
+            new OAT\Response(
+                response: 200,
+                description: 'JSON-Array mit allen Produkten; [] wenn keine vorhanden sind'
+            ),
+            new OAT\Response(
+                response: 401,
+                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+            ),
+            new OAT\Response(
+                response: 500,
+                description: 'Interner Serverfehler, beispielsweise ein Datenbankfehler'
+            )
+        ]
+    )]
     public function getProducts(Request $request, Response $response, array $args): Response
     {
         try {
@@ -46,12 +66,51 @@ class ProductController
      * @param array $args
      * @return Response
      */
+    #[OAT\Get(
+        path: '/api/v1/product/{sku}',
+        summary: 'Gibt ein Produkt anhand der SKU zurück',
+        tags: ['Produkte'],
+        parameters: [
+            new OAT\Parameter(
+                name: 'sku',
+                description: 'Eindeutige SKU des Produkts',
+                in: 'path',
+                required: true,
+                schema: new OAT\Schema(
+                    type: 'string',
+                    example: '12345678'
+                )
+            )
+        ],
+        responses: [
+            new OAT\Response(
+                response: 200,
+                description: 'JSON mit dem Produkt'
+            ),
+            new OAT\Response(
+                response: 400,
+                description: 'SKU ist leer oder länger als 100 Zeichen'
+            ),
+            new OAT\Response(
+                response: 404,
+                description: 'Produkt nicht gefunden; JSON mit message'
+            ),
+            new OAT\Response(
+                response: 401,
+                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+            ),
+            new OAT\Response(
+                response: 500,
+                description: 'Interner Serverfehler, beispielsweise ein Datenbankfehler'
+            )
+        ]
+    )]
     public function getProduct(Request $request, Response $response, array $args): Response
     {
         try {
             $sku = $args['sku'] ?? null;
             if (!is_string($sku) || trim($sku) === '' || mb_strlen($sku, 'UTF-8') > 100) {
-                return helper::error($response, 'SKU must contain 1 to 100 characters.', 400);
+                return helper::error($response, 'SKU must contain 1 to 100 characters.');
             }
             $sku = trim($sku);
 
@@ -75,6 +134,90 @@ class ProductController
      * @param array $args
      * @return Response
      */
+    #[OAT\Put(
+        path: '/api/v1/product/{sku}',
+        summary: 'Erstellt oder ersetzt ein Produkt anhand der SKU',
+        requestBody: new OAT\RequestBody(
+            required: true,
+            content: new OAT\JsonContent(
+                properties: [
+                    new OAT\Property(
+                        property: 'name',
+                        type: 'string',
+                        example: 'Brot'
+                    ),
+                    new OAT\Property(
+                        property: 'active',
+                        example: 'true, 1 oder "true"',
+                    ),
+                    new OAT\Property(
+                        property: 'id_category',
+                        type: 'integer',
+                        example: 1,
+                    ),
+                    new OAT\Property(
+                        property: 'image',
+                        type: 'string',
+                        example: 'https://example.com/logo.svg'
+                    ),
+                    new OAT\Property(
+                        property: 'description',
+                        type: 'string',
+                        example: 'Logo der CsBe'
+                    ),
+                    new OAT\Property(
+                        property: 'price',
+                        type: 'number',
+                        example: 123.98
+                    ),
+                    new OAT\Property(
+                        property: 'stock',
+                        type: 'integer',
+                        example: 3
+                    )
+                ],
+            )
+        ),
+        tags: ['Produkte'],
+        parameters: [
+            new OAT\Parameter(
+                name: 'sku',
+                description: 'Eindeutige SKU des Produkts',
+                in: 'path',
+                required: true,
+                schema: new OAT\Schema(
+                    type: 'string',
+                    example: '1',
+                )
+            )
+        ],
+        responses: [
+            new OAT\Response(
+                response: 200,
+                description: 'Produkt aktualisiert'
+            ),
+            new OAT\Response(
+                response: 201,
+                description: 'Produkt erstellt'
+            ),
+            new OAT\Response(
+                response: 400,
+                description: 'Ungültiger Request-Body, SKU, active oder Datentyp eines optionalen Textfelds'
+            ),
+            new OAT\Response(
+                response: 422,
+                description: 'Validation fehlgeschlagen'
+            ),
+            new OAT\Response(
+                response: 401,
+                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+            ),
+            new OAT\Response(
+                response: 500,
+                description: 'Interner Server Error'
+            )
+        ]
+    )]
     public function putProduct(Request $request, Response $response, array $args): Response
     {
         // validate args
@@ -193,6 +336,45 @@ class ProductController
      * @param array $args
      * @return Response
      */
+    #[OAT\Delete(
+        path: '/api/v1/product/{sku}',
+        summary: 'Löscht ein Produkt anhand der SKU',
+        tags: ['Produkte'],
+        parameters: [
+            new OAT\Parameter(
+                name: 'sku',
+                description: 'Eindeutige SKU des Produkts',
+                in: 'path',
+                required: true,
+                schema: new OAT\Schema(
+                    type: 'string',
+                    example: '1',
+                )
+            )
+        ],
+        responses: [
+            new OAT\Response(
+                response: 204,
+                description: 'Produkt gelöscht'
+            ),
+            new OAT\Response(
+                response: 400,
+                description: 'SKU ist leer oder länger als 100 Zeichen'
+            ),
+            new OAT\Response(
+                response: 404,
+                description: 'Produkt nicht gefunden; JSON mit error und code'
+            ),
+            new OAT\Response(
+                response: 401,
+                description: 'JWT-Cookie fehlt, ist ungültig oder abgelaufen'
+            ),
+            new OAT\Response(
+                response: 500,
+                description: 'Interner Server Error'
+            )
+        ]
+    )]
     public function deleteProduct(Request $request, Response $response, array $args): Response
     {
         try {

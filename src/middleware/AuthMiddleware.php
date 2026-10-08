@@ -5,6 +5,7 @@ namespace middleware;
 
 use Exception;
 use helpers\response as helper;
+use OpenApi\Attributes as OAT;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
@@ -15,6 +16,10 @@ use Slim\Psr7\Factory\ResponseFactory;
 /**
  * Middleware and Authentication Endpoint
  */
+#[OAT\Info(
+    version: '1.0.0',
+    title: 'Online-Shop API'
+)]
 class AuthMiddleware implements MiddlewareInterface
 {
 
@@ -39,6 +44,46 @@ class AuthMiddleware implements MiddlewareInterface
      * @param array $args
      * @return Response
      */
+    #[OAT\Post(
+        path: '/api/v1/authenticate',
+        summary: 'Meldet einen Benutzer an und setzt das JWT-Cookie',
+        requestBody: new OAT\RequestBody(
+            required: true,
+            content: new OAT\JsonContent(
+                properties: [
+                    new OAT\Property(
+                        property: 'username',
+                        type: 'string',
+                        example: 'benutzer'
+                    ),
+                    new OAT\Property(
+                        property: 'password',
+                        type: 'string',
+                        example: '123456'
+                    )
+                ]
+            )
+        ),
+        tags: ['Authentifizierung'],
+        responses: [
+            new OAT\Response(
+                response: 200,
+                description: 'Anmeldung erfolgreich; JSON mit message und JWT im Cookie jwt_token, gültig für eine Stunde'
+            ),
+            new OAT\Response(
+                response: 400,
+                description: 'Username oder Passwort fehlt, ist kein String oder ist leer'
+            ),
+            new OAT\Response(
+                response: 401,
+                description: 'Benutzername oder Passwort falsch'
+            ),
+            new OAT\Response(
+                response: 500,
+                description: 'Interner Server Error'
+            )
+        ]
+    )]
     public function authenticate(Request $request, Response $response, array $args): Response
     {
         try {
