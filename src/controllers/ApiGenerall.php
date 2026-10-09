@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
     info: new OAT\Info(
         version: '1.0.0',
         title: 'Online-Shop API',
-        description: 'API für Produkte und Kategorien. Zuerst über POST /api/v1/authenticate anmelden und danach das Cookie jwt_token mitsenden. Request-Bodies verwenden application/json. Antworten enthalten direkt die Daten; Fehler enthalten error und code. Ungültiges JSON, ein fehlender oder nicht verarbeitbarer Body und ungültige URL-Parameter führen zu 400; fehlende oder ungültige Felder zu 422. DELETE liefert bei Erfolg 204 ohne Body. Nicht unterstützte Pfade oder Methoden liefern 405.'
+        description: 'API für Produkte und Kategorien. Zuerst über POST /api/v1/authenticate anmelden und danach das Cookie jwt_token mitsenden. Request-Bodies verwenden application/json. Antworten enthalten direkt die Daten; Fehler enthalten error und code. Ungültiges JSON, ein fehlender oder nicht verarbeitbarer Body und ungültige URL-Parameter führen zu 400; fehlende oder ungültige Felder zu 422. DELETE liefert bei Erfolg 204 ohne Body. Anfragen ohne passende Route und HTTP-Methode erhalten 404.'
     ),
     servers: [new OAT\Server(url: '/', description: 'Aktueller Host')],
     security: [['CookieAuth' => []]],
@@ -148,7 +148,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class ApiGeneral
 {
     /**
-     * 405 endpoint
+     * 404 fallback endpoint
      * @param Request $request
      * @param Response $response
      * @param array $args
@@ -156,6 +156,6 @@ class ApiGeneral
      */
     static public function index(Request $request, Response $response, array $args): Response
     {
-        return helper::error($response, "Endpoint does not exist", 405);
+        return helper::error($response, "Endpoint does not exist", 404);
     }
 }

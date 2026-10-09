@@ -154,7 +154,7 @@ $app->group('/category', function (RouteCollectorProxy $group) use ($categoryCon
     $group->delete('/{category_id}', [$categoryController, "deleteCategory"]);
 })->addMiddleware($authentication);
 
-// ALL OTHER ENDPOINTS THAT NOT IMPLEMENTED; 405
+// Requests without a matching route; 404
 $app->any('{route:.*}', [ApiGeneral::class, 'index']);
 
 $app->run();
